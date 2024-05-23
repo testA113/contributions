@@ -25,22 +25,27 @@ async function getRepoLanguages(owner: string, repo: string) {
 }
 
 async function fetchAllCommits(owner: string, repo: string, user: string) {
-  const commits: string[] = [];
+  let commits: string[] = [];
   let page = 1;
   let response;
 
+  let hasMoreCommits = true;
   do {
     response = await octokit.repos.listCommits({
       owner,
       repo,
       author: user,
       per_page: 100,
-      page: page,
+      page,
     });
 
-    commits.push(...response.data.map((commit) => commit.sha));
+    commits = commits.concat(response.data.map((commit) => commit.sha));
     page++;
-  } while (response.data.length > 0);
+
+    if (response.data.length === 0) {
+      hasMoreCommits = false;
+    }
+  } while (hasMoreCommits);
 
   return commits;
 }
